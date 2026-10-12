@@ -521,7 +521,7 @@ def _run(
 
                 if client.update_date(asset_id, corrected_date):
                     success += 1
-                    logger.info("Updated  %s → %s", filename, corrected_date[:10])
+                    logger.info("Updated  %s → %s", filename, corrected_date)
                 else:
                     fail += 1
 

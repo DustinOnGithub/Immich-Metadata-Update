@@ -604,6 +604,7 @@ def _run(
         is_suspicious = (
             c.filename_date > c.asset.creation_date.astimezone(target_timezone).date()
         )
+        original_datetime = c.asset.creation_date.astimezone(target_timezone)
         prefix = (
             "⚠ WARNING " if is_suspicious and args.no_auto_skip
             else "⚠ SKIPPED " if is_suspicious
@@ -614,8 +615,8 @@ def _run(
             prefix,
             c.asset.visibility.capitalize(),
             c.asset.filename,
-            c.asset.creation_date.date(),
-            c.filename_date,
+            original_datetime.strftime("%Y-%m-%d %H:%M:%S %Z"),
+            c.corrected_datetime.strftime("%Y-%m-%d %H:%M:%S %Z"),
         )
 
     skipped = sum(

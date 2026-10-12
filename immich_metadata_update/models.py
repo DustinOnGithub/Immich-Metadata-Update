@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,9 @@ class Asset:
             return None
 
         try:
-            creation_date = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%fZ")
+            creation_date = datetime.strptime(
+                created_at, "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(tzinfo=timezone.utc)
         except ValueError:
             return None
 
@@ -52,4 +54,6 @@ class CorrectedAsset:
     @property
     def corrected_date_str(self) -> str:
         """Format the corrected datetime for the Immich API."""
-        return self.corrected_datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        return self.corrected_datetime.astimezone(timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%S.000Z"
+        )

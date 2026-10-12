@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, tzinfo
 from typing import NamedTuple
 
 from .models import Asset, CorrectedAsset
@@ -13,11 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class DatePattern(NamedTuple):
-    """A named regex + strptime format pair."""
+    """A named regex with date and optional time strptime formats."""
 
     name: str
     regex: str
     date_format: str
+    time_format: str | None = None
 
 
 # Built-in patterns ----------------------------------------------------------
@@ -50,8 +51,9 @@ BUILTIN_PATTERNS: dict[str, DatePattern] = {
     ),
     "signal": DatePattern(
         name="Signal",
-        regex=r"^signal-(\d{4}-\d{2}-\d{2})-\d{2}-\d{2}-\d{2}-.*$",
+        regex=r"^signal-(\d{4}-\d{2}-\d{2})-(\d{2}(?:-?\d{2}){2})(?:[- ].*)?$",
         date_format="%Y-%m-%d",
+        time_format="%H%M%S",
     ),
 }
 
@@ -60,11 +62,13 @@ def find_mismatched_assets(
     assets: list[Asset],
     regex: str,
     date_format: str,
+    target_timezone: tzinfo,
+    time_format: str | None = None,
 ) -> list[CorrectedAsset]:
     """Return assets whose filename date does not match their creation date.
 
-    The corrected datetime preserves the original time-of-day but replaces
-    the date component with the one extracted from the filename.
+    The corrected datetime is built in *target_timezone*. It preserves the
+    original local time unless the pattern includes a time capture group.
     """
     pattern = re.compile(regex, re.IGNORECASE)
     results: list[CorrectedAsset] = []
@@ -80,6 +84,11 @@ def find_mismatched_assets(
 
         try:
             filename_date = datetime.strptime(filename_date_str, date_format).date()
+            filename_time = None
+            if time_format:
+                filename_time = datetime.strptime(
+                    match.group(2).replace("-", ""), time_format
+                ).time()
         except ValueError:
             logger.warning(
                 "Could not parse date '%s' from filename '%s'",
@@ -88,10 +97,21 @@ def find_mismatched_assets(
             )
             continue
 
-        if filename_date == asset.creation_date.date():
+        creation_date = asset.creation_date.astimezone(target_timezone)
+        if (
+            filename_date == creation_date.date()
+            and (
+                filename_time is None
+                or filename_time == creation_date.time().replace(microsecond=0)
+            )
+        ):
             continue  # dates already match — nothing to fix
 
-        corrected_dt = datetime.combine(filename_date, asset.creation_date.time())
+        corrected_dt = datetime.combine(
+            filename_date,
+            filename_time or creation_date.time(),
+            tzinfo=target_timezone,
+        )
         results.append(
             CorrectedAsset(
                 asset=asset,

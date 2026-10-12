@@ -42,6 +42,15 @@ After that, run the tool with:
 python run.py --preset whatsapp
 ```
 
+## Tests
+
+Install the optional development dependencies and run the test suite:
+
+```bash
+pip install -e '.[dev]'
+pytest
+```
+
 ## Configuration
 
 The easiest approach is to create a **`.env` file** in the project directory (a template is provided):

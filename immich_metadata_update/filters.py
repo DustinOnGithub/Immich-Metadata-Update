@@ -26,13 +26,14 @@ class DatePattern(NamedTuple):
 BUILTIN_PATTERNS: dict[str, DatePattern] = {
     "whatsapp": DatePattern(
         name="WhatsApp",
-        regex=r"^(?:IMG|VID)-(\d{8})-WA\d{4}(?:[-_][^.]+)?\.\w+$",
+        regex=r"^(?:IMG|VID)-(\d{8})-WA\d{4}(?:[-_~][^.]+)?\.\w+$",
         date_format="%Y%m%d",
     ),
     "screenshot_basic": DatePattern(
         name="Screenshot (basic)",
-        regex=r"^Screenshot_(\d{8})-\d{6}\.\w+$",
+        regex=r"^Screenshot_(\d{8})-(\d{6})(?:~\d+)?\.\w+$",
         date_format="%Y%m%d",
+        time_format="%H%M%S",
     ),
     "screenshot_full": DatePattern(
         name="Screenshot (with app name or 'from')",
@@ -46,19 +47,37 @@ BUILTIN_PATTERNS: dict[str, DatePattern] = {
     ),
     "camera_img": DatePattern(
         name="Camera IMG",
-        regex=r"^IMG_(\d{8})_(\d{6})(?:_?\d+)?(?:-[^.]+)?\.\w+$",
+        regex=r"^IMG_(\d{8})_(\d{6})(?:_?\d+)?(?:[-_][^.]+)?\.\w+$",
         date_format="%Y%m%d",
         time_format="%H%M%S",
     ),
     "animation": DatePattern(
         name="Animation",
-        regex=r"^(?:IMG_)?(\d{8})_(\d{6})(?:_?\d+)?-ANIMATION\.\w+$",
+        regex=r"^(?:(?:IMG|VID)_)?(\d{8})_(\d{6})(?:_?\d+)?-ANIMATION\.\w+$",
+        date_format="%Y%m%d",
+        time_format="%H%M%S",
+    ),
+    "timestamp": DatePattern(
+        name="Timestamp",
+        regex=r"^(\d{8})_(\d{6})\.\w+$",
+        date_format="%Y%m%d",
+        time_format="%H%M%S",
+    ),
+    "whatsapp_verbose": DatePattern(
+        name="WhatsApp (verbose)",
+        regex=r"^WhatsApp Image (\d{4}-\d{2}-\d{2}) at (\d{2}\.\d{2}\.\d{2})\.\w+$",
+        date_format="%Y-%m-%d",
+        time_format="%H.%M.%S",
+    ),
+    "photo_free": DatePattern(
+        name="Photo free",
+        regex=r"^photo_free_(\d{8})_(\d{6})\.\w+$",
         date_format="%Y%m%d",
         time_format="%H%M%S",
     ),
     "signal": DatePattern(
         name="Signal",
-        regex=r"^signal-(\d{4}-\d{2}-\d{2})-(\d{2}(?:-?\d{2}){2})(?:[- ].*)?\.\w+$",
+        regex=r"^signal-(\d{4}-\d{2}-\d{2})-(\d{2}(?:-?\d{2}){2})(?:[-_ ].*)?\.\w+$",
         date_format="%Y-%m-%d",
         time_format="%H%M%S",
     ),

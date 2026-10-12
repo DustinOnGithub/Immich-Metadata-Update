@@ -177,7 +177,7 @@ python run.py --list-presets
 ```
 
 Available presets: `whatsapp`, `screenshot_basic`, `screenshot_full`, `photo_editor`,
-`camera_img`, `animation`, `signal`.
+`camera_img`, `animation`, `timestamp`, `whatsapp_verbose`, `photo_free`, `signal`.
 
 The `signal` preset recognizes both `signal-YYYY-MM-DD-HH-MM-SS-...` and
 `signal-YYYY-MM-DD-HHMMSS ...` filenames and corrects their date and time.
@@ -260,7 +260,7 @@ The script updates the **`dateTimeOriginal`** field in Immich's database through
 ## Limitations
 
 - **Immich-specific:** This tool talks to the Immich API. It does not modify files on disk or embedded EXIF metadata.
-- **Time information:** The Signal, Animation, and Camera IMG presets extract both date and time. Other built-in presets preserve the asset's existing local time in `IMMICH_TIMEZONE` while correcting its date.
+- **Time information:** The Screenshot (basic), Signal, Animation, Camera IMG, Timestamp, WhatsApp (verbose), and Photo free presets extract both date and time. Other built-in presets preserve the asset's existing local time in `IMMICH_TIMEZONE` while correcting its date.
 - **Filename conventions:** Only assets whose filenames match the chosen regex are affected. Assets with unrecognized naming patterns are silently skipped.
 - **API availability:** Requires Immich to be running and accessible. The API key must have sufficient permissions to search and update assets.
 

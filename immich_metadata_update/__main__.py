@@ -9,6 +9,7 @@ import os
 import sys
 from datetime import date
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from . import __version__
 from .client import AlbumFilterUnsupportedError, ImmichClient
@@ -19,6 +20,7 @@ logger = logging.getLogger("immich_metadata_update")
 ENV_FILE_SEARCH_NAMES = (".env", ".env.local")
 DEFAULT_EXPORT_FILE = Path("corrections.json")
 DEFAULT_DECISIONS_FILE = Path("decisions.json")
+DEFAULT_TIMEZONE = "UTC"
 
 
 def load_env_file() -> None:
@@ -210,18 +212,34 @@ def list_presets() -> None:
         print(f"  {key:<20s}  {pat.name}")
         print(f"  {'':20s}  regex : {pat.regex}")
         print(f"  {'':20s}  format: {pat.date_format}")
+        if pat.time_format:
+            print(f"  {'':20s}  time  : {pat.time_format}")
         print()
 
 
-def resolve_patterns(args: argparse.Namespace) -> list[tuple[str, str]]:
+def get_timezone() -> ZoneInfo:
+    """Return the configured IANA timezone, defaulting to UTC."""
+    timezone_name = os.getenv("IMMICH_TIMEZONE", DEFAULT_TIMEZONE)
+    try:
+        return ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        print(
+            "Error: IMMICH_TIMEZONE must be a valid IANA timezone, "
+            f"not {timezone_name!r}.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+def resolve_patterns(args: argparse.Namespace) -> list[tuple[str, str, str | None]]:
     """Return the filename patterns selected by CLI arguments."""
     if args.preset:
         pat = BUILTIN_PATTERNS[args.preset]
-        return [(pat.regex, pat.date_format)]
+        return [(pat.regex, pat.date_format, pat.time_format)]
 
     if args.regex or args.date_format:
         if args.regex and args.date_format:
-            return [(args.regex, args.date_format)]
+            return [(args.regex, args.date_format, None)]
         print(
             "Error: --regex and --date-format must be provided together.",
             file=sys.stderr,
@@ -230,7 +248,7 @@ def resolve_patterns(args: argparse.Namespace) -> list[tuple[str, str]]:
 
     if args.album:
         return [
-            (pattern.regex, pattern.date_format)
+            (pattern.regex, pattern.date_format, pattern.time_format)
             for pattern in BUILTIN_PATTERNS.values()
         ]
 
@@ -309,6 +327,7 @@ def record_decisions(
 def export_corrections(
     corrected,
     export_path: Path,
+    target_timezone: ZoneInfo,
     no_auto_skip: bool = False,
 ) -> None:
     """Write the corrections list to a human-editable JSON file.
@@ -323,7 +342,9 @@ def export_corrections(
     warn_count = 0
 
     for c in corrected:
-        is_suspicious = c.filename_date > c.asset.creation_date.date()
+        is_suspicious = (
+            c.filename_date > c.asset.creation_date.astimezone(target_timezone).date()
+        )
         if is_suspicious:
             warn_count += 1
 
@@ -418,6 +439,7 @@ def main(argv: list[str] | None = None) -> None:
 
     decisions_path = args.decisions_file or DEFAULT_DECISIONS_FILE
     decisions = load_decisions(decisions_path)
+    target_timezone = get_timezone()
     client = ImmichClient(args.url, args.api_key)
 
     # Unlock the locked folder if credentials are provided
@@ -440,7 +462,7 @@ def main(argv: list[str] | None = None) -> None:
             )
 
     try:
-        _run(args, client, decisions, decisions_path, include_locked)
+        _run(args, client, decisions, decisions_path, include_locked, target_timezone)
     except AlbumFilterUnsupportedError as exc:
         logger.error("%s", exc)
         sys.exit(1)
@@ -455,6 +477,7 @@ def _run(
     decisions: dict,
     decisions_path: Path,
     include_locked: bool,
+    target_timezone: ZoneInfo,
 ) -> None:
     """Core logic, separated so the caller can guarantee lock_session in finally."""
 
@@ -498,7 +521,7 @@ def _run(
 
                 if client.update_date(asset_id, corrected_date):
                     success += 1
-                    logger.info("Updated  %s → %s", filename, corrected_date[:10])
+                    logger.info("Updated  %s → %s", filename, corrected_date)
                 else:
                     fail += 1
 
@@ -541,8 +564,10 @@ def _run(
         return
 
     corrected_by_id = {}
-    for regex, date_format in patterns:
-        for corrected_asset in find_mismatched_assets(assets, regex, date_format):
+    for regex, date_format, time_format in patterns:
+        for corrected_asset in find_mismatched_assets(
+            assets, regex, date_format, target_timezone, time_format
+        ):
             corrected_by_id.setdefault(corrected_asset.asset.id, corrected_asset)
     corrected = list(corrected_by_id.values())
 
@@ -568,10 +593,18 @@ def _run(
 
     # Write the corrections file for review
     export_path = args.export or DEFAULT_EXPORT_FILE
-    export_corrections(corrected, export_path, no_auto_skip=args.no_auto_skip)
+    export_corrections(
+        corrected,
+        export_path,
+        target_timezone,
+        no_auto_skip=args.no_auto_skip,
+    )
 
     for c in corrected:
-        is_suspicious = c.filename_date > c.asset.creation_date.date()
+        is_suspicious = (
+            c.filename_date > c.asset.creation_date.astimezone(target_timezone).date()
+        )
+        original_datetime = c.asset.creation_date.astimezone(target_timezone)
         prefix = (
             "⚠ WARNING " if is_suspicious and args.no_auto_skip
             else "⚠ SKIPPED " if is_suspicious
@@ -582,13 +615,16 @@ def _run(
             prefix,
             c.asset.visibility.capitalize(),
             c.asset.filename,
-            c.asset.creation_date.date(),
-            c.filename_date,
+            original_datetime.strftime("%Y-%m-%d %H:%M:%S %Z"),
+            c.corrected_datetime.strftime("%Y-%m-%d %H:%M:%S %Z"),
         )
 
     skipped = sum(
         1 for c in corrected
-        if c.filename_date > c.asset.creation_date.date() and not args.no_auto_skip
+        if (
+            c.filename_date > c.asset.creation_date.astimezone(target_timezone).date()
+            and not args.no_auto_skip
+        )
     )
     to_apply = len(corrected) - skipped
 

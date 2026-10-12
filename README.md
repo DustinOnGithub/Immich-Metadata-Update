@@ -42,6 +42,15 @@ After that, run the tool with:
 python run.py --preset whatsapp
 ```
 
+## Tests
+
+Install the optional development dependencies and run the test suite:
+
+```bash
+pip install -e '.[dev]'
+pytest
+```
+
 ## Configuration
 
 The easiest approach is to create a **`.env` file** in the project directory (a template is provided):
@@ -54,6 +63,7 @@ cp .env.example .env
 ```dotenv
 IMMICH_URL=http://192.168.1.100:2283
 IMMICH_API_KEY=your-api-key-here
+IMMICH_TIMEZONE=Europe/Berlin
 ```
 
 The tool automatically reads this file on startup, so you can simply run:
@@ -61,6 +71,10 @@ The tool automatically reads this file on startup, so you can simply run:
 ```bash
 python run.py --preset whatsapp
 ```
+
+`IMMICH_TIMEZONE` determines how dates and times from filenames are interpreted.
+It accepts an IANA timezone such as `Europe/Berlin` and defaults to `UTC` (UTC+0).
+The resulting timestamp is converted to UTC before it is sent to Immich.
 
 ### Locked folder
 
@@ -162,7 +176,11 @@ List the available filename presets:
 python run.py --list-presets
 ```
 
-Available presets: `whatsapp`, `screenshot_basic`, `screenshot_full`, `signal`.
+Available presets: `whatsapp`, `screenshot_basic`, `screenshot_full`, `photo_editor`,
+`camera_img`, `animation`, `timestamp`, `whatsapp_verbose`, `photo_free`, `signal`.
+
+The `signal` preset recognizes both `signal-YYYY-MM-DD-HH-MM-SS-...` and
+`signal-YYYY-MM-DD-HHMMSS ...` filenames and corrects their date and time.
 
 Use a custom regex (the capture group must wrap the date portion):
 
@@ -242,7 +260,7 @@ The script updates the **`dateTimeOriginal`** field in Immich's database through
 ## Limitations
 
 - **Immich-specific:** This tool talks to the Immich API. It does not modify files on disk or embedded EXIF metadata.
-- **Date only:** The built-in presets extract a date (year-month-day) from the filename. The original time-of-day from the existing creation date is preserved. If your filenames contain time information and you need to correct that too, use a custom regex with an appropriate date format that includes time components.
+- **Time information:** The Screenshot (basic), Signal, Animation, Camera IMG, Timestamp, WhatsApp (verbose), and Photo free presets extract both date and time. Other built-in presets preserve the asset's existing local time in `IMMICH_TIMEZONE` while correcting its date.
 - **Filename conventions:** Only assets whose filenames match the chosen regex are affected. Assets with unrecognized naming patterns are silently skipped.
 - **API availability:** Requires Immich to be running and accessible. The API key must have sufficient permissions to search and update assets.
 

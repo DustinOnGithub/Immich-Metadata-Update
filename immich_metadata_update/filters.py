@@ -25,7 +25,7 @@ class DatePattern(NamedTuple):
 BUILTIN_PATTERNS: dict[str, DatePattern] = {
     "whatsapp": DatePattern(
         name="WhatsApp",
-        regex=r"^IMG-(\d{8})-WA\d{4}\.\w+$",
+        regex=r"^(?:IMG|VID)-(\d{8})-WA\d{4}\.\w+$",
         date_format="%Y%m%d",
     ),
     "screenshot_basic": DatePattern(
@@ -34,9 +34,19 @@ BUILTIN_PATTERNS: dict[str, DatePattern] = {
         date_format="%Y%m%d",
     ),
     "screenshot_full": DatePattern(
-        name="Screenshot (with app name)",
-        regex=r"^Screenshot_(\d{4}-\d{2}-\d{2}).*$",
+        name="Screenshot (with app name or 'from')",
+        regex=r"^Screenshot(?:_| from )(\d{4}-\d{2}-\d{2}).*$",
         date_format="%Y-%m-%d",
+    ),
+    "photo_editor": DatePattern(
+        name="PhotoEditor",
+        regex=r"^PhotoEditor_(\d{8})_\d+\.\w+$",
+        date_format="%Y%m%d",
+    ),
+    "camera_img": DatePattern(
+        name="Camera IMG",
+        regex=r"^IMG_(\d{8})_\d{6}_\d+\.\w+$",
+        date_format="%Y%m%d",
     ),
     "signal": DatePattern(
         name="Signal",

@@ -162,7 +162,8 @@ List the available filename presets:
 python run.py --list-presets
 ```
 
-Available presets: `whatsapp`, `screenshot_basic`, `screenshot_full`, `signal`.
+Available presets: `whatsapp`, `screenshot_basic`, `screenshot_full`, `photo_editor`,
+`camera_img`, `signal`.
 
 Use a custom regex (the capture group must wrap the date portion):
 

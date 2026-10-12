@@ -49,6 +49,12 @@ BUILTIN_PATTERNS: dict[str, DatePattern] = {
         regex=r"^IMG_(\d{8})_\d{6}(?:_?\d+)?\.\w+$",
         date_format="%Y%m%d",
     ),
+    "animation": DatePattern(
+        name="Animation",
+        regex=r"^(\d{8})_(\d{6})-ANIMATION\.\w+$",
+        date_format="%Y%m%d",
+        time_format="%H%M%S",
+    ),
     "signal": DatePattern(
         name="Signal",
         regex=r"^signal-(\d{4}-\d{2}-\d{2})-(\d{2}(?:-?\d{2}){2})(?:[- ].*)?$",

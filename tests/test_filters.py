@@ -22,6 +22,7 @@ from immich_metadata_update.models import Asset
         ("photo_editor", "PhotoEditor_20190427_151808482.jpg", "20190427"),
         ("camera_img", "IMG_20230720_223243_780.jpg", "20230720"),
         ("camera_img", "IMG_20200619_201658164.jpg", "20200619"),
+        ("animation", "20240324_211032-ANIMATION.gif", "20240324"),
     ],
 )
 def test_builtin_patterns_extract_dates(preset, filename, expected_date):
@@ -40,6 +41,7 @@ def test_builtin_patterns_extract_dates(preset, filename, expected_date):
         ("whatsapp", "IMG_20240305_WA0013.jpg"),
         ("camera_img", "IMG_20200619_20165.jpg"),
         ("camera_img", "IMG_20200619_201658_.jpg"),
+        ("animation", "20240324_21103-ANIMATION.gif"),
         ("signal", "signal-2021-04-04-21312.jpg"),
         ("signal", "signal-2021-04-04-21:31:23.jpg"),
     ],
@@ -96,6 +98,27 @@ def test_date_only_pattern_preserves_existing_time():
 
     assert [item.corrected_date_str for item in corrected] == [
         "2020-06-19T12:34:56.000Z"
+    ]
+
+
+def test_animation_pattern_corrects_date_and_time():
+    pattern = BUILTIN_PATTERNS["animation"]
+    asset = Asset(
+        id="asset-1",
+        filename="20240324_211032-ANIMATION.gif",
+        creation_date=datetime(2024, 1, 1, 12, tzinfo=timezone.utc),
+    )
+
+    corrected = find_mismatched_assets(
+        [asset],
+        pattern.regex,
+        pattern.date_format,
+        timezone.utc,
+        pattern.time_format,
+    )
+
+    assert [item.corrected_date_str for item in corrected] == [
+        "2024-03-24T21:10:32.000Z"
     ]
 
 

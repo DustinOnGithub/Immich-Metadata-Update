@@ -177,7 +177,7 @@ python run.py --list-presets
 ```
 
 Available presets: `whatsapp`, `screenshot_basic`, `screenshot_full`, `photo_editor`,
-`camera_img`, `signal`.
+`camera_img`, `animation`, `signal`.
 
 The `signal` preset recognizes both `signal-YYYY-MM-DD-HH-MM-SS-...` and
 `signal-YYYY-MM-DD-HHMMSS ...` filenames and corrects their date and time.

@@ -54,13 +54,14 @@ def test_builtin_patterns_reject_malformed_filenames(preset, filename):
 
 
 @pytest.mark.parametrize(
-    "filename",
+    ("filename", "expected_timestamp"),
     [
-        "signal-2021-04-04-21-31-23-copy.jpg",
-        "signal-2021-04-04-213123 (5).jpg",
+        ("signal-2021-04-04-21-31-23-copy.jpg", "2021-04-04T21:31:23.000Z"),
+        ("signal-2021-04-04-213123 (5).jpg", "2021-04-04T21:31:23.000Z"),
+        ("signal-2021-09-14-003021.jpg", "2021-09-14T00:30:21.000Z"),
     ],
 )
-def test_signal_patterns_correct_date_and_time(filename):
+def test_signal_patterns_correct_date_and_time(filename, expected_timestamp):
     pattern = BUILTIN_PATTERNS["signal"]
     asset = Asset(
         id="asset-1",
@@ -76,9 +77,7 @@ def test_signal_patterns_correct_date_and_time(filename):
         pattern.time_format,
     )
 
-    assert [item.corrected_date_str for item in corrected] == [
-        "2021-04-04T21:31:23.000Z"
-    ]
+    assert [item.corrected_date_str for item in corrected] == [expected_timestamp]
 
 
 def test_date_only_pattern_preserves_existing_time():

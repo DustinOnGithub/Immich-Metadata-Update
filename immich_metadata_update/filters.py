@@ -57,7 +57,7 @@ BUILTIN_PATTERNS: dict[str, DatePattern] = {
     ),
     "signal": DatePattern(
         name="Signal",
-        regex=r"^signal-(\d{4}-\d{2}-\d{2})-(\d{2}(?:-?\d{2}){2})(?:[- ].*)?$",
+        regex=r"^signal-(\d{4}-\d{2}-\d{2})-(\d{2}(?:-?\d{2}){2})(?:[- ].*)?\.\w+$",
         date_format="%Y-%m-%d",
         time_format="%H%M%S",
     ),

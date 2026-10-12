@@ -26,7 +26,7 @@ class DatePattern(NamedTuple):
 BUILTIN_PATTERNS: dict[str, DatePattern] = {
     "whatsapp": DatePattern(
         name="WhatsApp",
-        regex=r"^(?:IMG|VID)-(\d{8})-WA\d{4}(?:-[^.]+)?\.\w+$",
+        regex=r"^(?:IMG|VID)-(\d{8})-WA\d{4}(?:[-_][^.]+)?\.\w+$",
         date_format="%Y%m%d",
     ),
     "screenshot_basic": DatePattern(

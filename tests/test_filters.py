@@ -15,6 +15,7 @@ from immich_metadata_update.models import Asset
         ("whatsapp", "IMG-20240305-WA0013.jpg", "20240305"),
         ("whatsapp", "VID-20211030-WA0003.mp4", "20211030"),
         ("whatsapp", "IMG-20200624-WA0007-bearbeitet.jpeg", "20200624"),
+        ("whatsapp", "VID-20210529-WA0011_exported_1568.jpg", "20210529"),
         ("whatsapp", "img-20200624-wa0007-Edited.JPG", "20200624"),
         ("screenshot_basic", "Screenshot_20220601-123456.png", "20220601"),
         ("screenshot_full", "Screenshot_2022-02-28_app.png", "2022-02-28"),

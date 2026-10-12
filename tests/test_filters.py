@@ -23,7 +23,9 @@ from immich_metadata_update.models import Asset
         ("photo_editor", "PhotoEditor_20190427_151808482.jpg", "20190427"),
         ("camera_img", "IMG_20230720_223243_780.jpg", "20230720"),
         ("camera_img", "IMG_20200619_201658164.jpg", "20200619"),
+        ("camera_img", "IMG_20211107_112711_159-bearbeitet.jpg", "20211107"),
         ("animation", "20240324_211032-ANIMATION.gif", "20240324"),
+        ("animation", "IMG_20220723_173027622-ANIMATION.gif", "20220723"),
     ],
 )
 def test_builtin_patterns_extract_dates(preset, filename, expected_date):
@@ -80,11 +82,21 @@ def test_signal_patterns_correct_date_and_time(filename, expected_timestamp):
     assert [item.corrected_date_str for item in corrected] == [expected_timestamp]
 
 
-def test_date_only_pattern_preserves_existing_time():
+@pytest.mark.parametrize(
+    ("filename", "expected_timestamp"),
+    [
+        ("IMG_20200619_201658164.jpg", "2020-06-19T20:16:58.000Z"),
+        (
+            "IMG_20211107_112711_159-bearbeitet.jpg",
+            "2021-11-07T11:27:11.000Z",
+        ),
+    ],
+)
+def test_camera_pattern_corrects_date_and_time(filename, expected_timestamp):
     pattern = BUILTIN_PATTERNS["camera_img"]
     asset = Asset(
         id="asset-1",
-        filename="IMG_20200619_201658164.jpg",
+        filename=filename,
         creation_date=datetime(2024, 1, 1, 12, 34, 56, tzinfo=timezone.utc),
     )
 
@@ -96,16 +108,24 @@ def test_date_only_pattern_preserves_existing_time():
         pattern.time_format,
     )
 
-    assert [item.corrected_date_str for item in corrected] == [
-        "2020-06-19T12:34:56.000Z"
-    ]
+    assert [item.corrected_date_str for item in corrected] == [expected_timestamp]
 
 
-def test_animation_pattern_corrects_date_and_time():
+@pytest.mark.parametrize(
+    ("filename", "expected_timestamp"),
+    [
+        ("20240324_211032-ANIMATION.gif", "2024-03-24T21:10:32.000Z"),
+        (
+            "IMG_20220723_173027622-ANIMATION.gif",
+            "2022-07-23T17:30:27.000Z",
+        ),
+    ],
+)
+def test_animation_pattern_corrects_date_and_time(filename, expected_timestamp):
     pattern = BUILTIN_PATTERNS["animation"]
     asset = Asset(
         id="asset-1",
-        filename="20240324_211032-ANIMATION.gif",
+        filename=filename,
         creation_date=datetime(2024, 1, 1, 12, tzinfo=timezone.utc),
     )
 
@@ -117,9 +137,7 @@ def test_animation_pattern_corrects_date_and_time():
         pattern.time_format,
     )
 
-    assert [item.corrected_date_str for item in corrected] == [
-        "2024-03-24T21:10:32.000Z"
-    ]
+    assert [item.corrected_date_str for item in corrected] == [expected_timestamp]
 
 
 def test_invalid_filename_date_does_not_create_a_correction():

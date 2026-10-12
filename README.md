@@ -260,7 +260,7 @@ The script updates the **`dateTimeOriginal`** field in Immich's database through
 ## Limitations
 
 - **Immich-specific:** This tool talks to the Immich API. It does not modify files on disk or embedded EXIF metadata.
-- **Time information:** The Signal preset extracts both date and time. Other built-in presets preserve the asset's existing local time in `IMMICH_TIMEZONE` while correcting its date.
+- **Time information:** The Signal, Animation, and Camera IMG presets extract both date and time. Other built-in presets preserve the asset's existing local time in `IMMICH_TIMEZONE` while correcting its date.
 - **Filename conventions:** Only assets whose filenames match the chosen regex are affected. Assets with unrecognized naming patterns are silently skipped.
 - **API availability:** Requires Immich to be running and accessible. The API key must have sufficient permissions to search and update assets.
 
